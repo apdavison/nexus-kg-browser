@@ -35,8 +35,6 @@ Author: Andrew P. Davison, UNIC, CNRS
         console.log(response);
     };
 
-    var config = {};
-
     People.query().then(
         function(people) {
             vm.people = people;
@@ -68,86 +66,56 @@ Author: Andrew P. Davison, UNIC, CNRS
     );
 
   })
-  .service("People", function($http, $q) {
+  .factory("KGResource", function($http, $q) {
         var error = function(response) {
             console.log(response);
         };
-        var config = {};
 
-        var People = {
-            query: function(filter) {
-                var resource_uri = "https://nexus.humanbrainproject.org/v0/data/bbp/core/person/v0.1.0";
-                resource_uri += "?deprecated=False";
+        return function (collection_uri) {
+            //a constructor for new resources
+            var Resource = function (data) {
+                angular.extend(this, data);
+            };
+
+            var config = {};
+            collection_uri += "?deprecated=False";
+
+            Resource.query = function(filter) {
                 if (filter) {
-                    resource_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
+                    collection_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
                 }
-                return $http.get(resource_uri, config).then(
-                    // on retrieving the list of Person URIs, we...
+                return $http.get(collection_uri, config).then(
+                    // on retrieving the list of instance URIs, we...
                     function(response) {
                         console.log(response);
                         // ...construct a list of http promises, then ...
-                        var people_promises = [];
+                        var promises = [];
                         for (let result of response.data.results) {
-                            people_promises.push($http.get(result.resultId, config));
+                            promises.push($http.get(result.resultId, config));
                         }
                         // ... when they all resolve, we put the data
                         // into an array, which is returned when the promise
                         // is resolved
-                        var people_promise = $q.all(people_promises).then(
+                        var instances_promise = $q.all(promises).then(
                             function(responses) {
                                 console.log(responses);
-                                var people = [];
+                                var instances = [];
                                 for (let response of responses) {
-                                    people.push(response.data);
+                                    instances.push(response.data);
                                 }
-                                return people;
+                                return instances;
                             },
                             error);
-                        return people_promise;
+                        return instances_promise;
                     },
                     error);
             }
+            return Resource
         };
-        return People;
-  })
-  .service("Organization", function($http, $q) {
-        var error = function(response) {
-            console.log(response);
-        };
-        var config = {};
-
-        var Organization = {
-            query: function() {
-                return $http.get("https://nexus.humanbrainproject.org/v0/data/bbp/core/organization/v0.1.0", config).then(
-                    // on retrieving the list of Organization URIs, we...
-                    function(response) {
-                        console.log(response);
-                        // ...construct a list of http promises, then ...
-                        var org_promises = [];
-                        for (let result of response.data.results) {
-                            org_promises.push($http.get(result.resultId, config));
-                        }
-                        // ... when they all resolve, we put the data
-                        // into an array, which is returned when the promise
-                        // is resolved
-                        var orgs_promise = $q.all(org_promises).then(
-                            function(responses) {
-                                console.log(responses);
-                                var orgs = [];
-                                for (let response of responses) {
-                                    orgs.push(response.data);
-                                }
-                                return orgs;
-                            },
-                            error);
-                        return orgs_promise;
-                    },
-                    error);
-            }
-        };
-        return Organization;
-  })
-
-  ;
+  }).factory('People', function (KGResource) {
+      return KGResource('https://nexus.humanbrainproject.org/v0/data/bbp/core/person/v0.1.0');
+  }).factory('Organization', function (KGResource) {
+      return KGResource('https://nexus.humanbrainproject.org/v0/data/bbp/core/organization/v0.1.0');
+  });
 
 })();
