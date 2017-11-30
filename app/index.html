@@ -1,0 +1,63 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <base href="/">
+
+  <title>NAR</title>
+
+  <!-- css files -->
+  <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,700'>
+  <link rel="stylesheet" href="/node_modules/angular-material/angular-material.css"/>
+  <link rel="stylesheet" href="/app/app.css">
+
+  <!--angular and ui-router-->
+  <script src="/node_modules/angular/angular.js"></script>
+  <script src="/node_modules/angular-ui-router/release/angular-ui-router.js"></script>
+  <script src="/node_modules/angular-animate/angular-animate.js"></script>
+  <script src="/node_modules/angular-aria/angular-aria.js"></script>
+  <script src="/node_modules/angular-messages/angular-messages.js"></script>
+  <script src="/node_modules/angular-material/angular-material.js"></script>
+
+  <!--our angular app-->
+  <script src="/app/app.js"></script>
+</head>
+
+<body ng-app="nar">
+      <!-- Container #1 (see wireframe) -->
+    <md-toolbar layout="row" class="md-toolbar-tools">
+      <h1>NAR</h1>
+    </md-toolbar>
+
+    <!-- Container #2 -->
+    <div flex layout="row">
+
+      <!-- Container #3 -->
+      <md-sidenav md-is-locked-open="true" class="md-whiteframe-4dp">
+        Sidenav
+      </md-sidenav>
+
+      <!-- Container #4 -->
+      <md-content flex id="content" ng-controller="DefaultController as app">
+        <!-- <div ui-view>Hello, world!</div> -->
+
+        <h3>People</h3>
+        <ul>
+          <li ng-repeat="person in app.people">{{person.givenName}} {{person.familyName}} &lt;{{person.email}}&gt;</li>
+        </ul>
+
+        Selected person: {{app.selected_person.givenName}} {{app.selected_person.familyName}} &lt;{{app.selected_person.email}}&gt;</span>
+
+        <h3>Organizations</h3>
+        <ul>
+          <li ng-repeat="org in app.organizations">{{org.name}}, {{org.address.addressLocality}}, {{org.address.addressCountry}}</li>
+        </ul>
+      </md-content>
+
+    </div>
+
+
+</body>
+</html>
