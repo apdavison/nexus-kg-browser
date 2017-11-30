@@ -23,6 +23,8 @@
 
   <!--our angular app-->
   <script src="/app/app.js"></script>
+  <script src="/app/services.js"></script>
+  <script src="/app/controllers.js"></script>
 </head>
 
 <body ng-app="nar">
@@ -54,6 +56,14 @@
         <ul>
           <li ng-repeat="org in app.organizations">{{org.name}}, {{org.address.addressLocality}}, {{org.address.addressCountry}}</li>
         </ul>
+
+        <h3>Subjects</h3>
+        <ul>
+          <li ng-repeat="subject in app.subjects">
+            #{{subject.name}} - {{subject.species.label}}, {{subject.sex.label}},
+            {{subject.age.value.value}} {{subject.age.value.label}} {{subject.age.period}}</li>
+        </ul>
+
       </md-content>
 
     </div>
