@@ -21,6 +21,37 @@ angular.module('nar')
         var config = {};
         collection_uri += "?deprecated=False";
 
+        var Instance = function(response) {
+            var instance = response.data;
+
+            instance.get_related = function() {
+                var related = {};
+
+                var traverse = function(instance, parent_attribute) {
+                    // traverse - requires lodash
+                    _.forIn(instance, function (value, attribute) {
+                        if (parent_attribute && attribute === "@id") {
+                            related[parent_attribute] = value;
+                        } else if (['@context', 'deprecated', 'rev', 'links', '@type'].indexOf(attribute) < 0) {
+                            if (_.isArray(value)) {
+                                value.forEach(function(element) {
+                                    if (_.isObject(element)) {
+                                        traverse(element, attribute); // to fix: subsequent elements will overwrite the first one in `related`
+                                    }
+                                });
+                            } else if (_.isObject(value)) {
+                                traverse(value, attribute);
+                            }
+                        }
+                    });
+                };
+                traverse(instance, null);
+                //console.log(related);
+                return related;
+            }
+            return instance;
+        };
+
         Resource.query = function(filter) {
             if (filter) {
                 collection_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
@@ -40,7 +71,7 @@ angular.module('nar')
                         function(responses) {
                             var instances = [];
                             for (let response of responses) {
-                                instances.push(response.data);
+                                instances.push(Instance(response));
                             }
                             return instances;
                         },

@@ -3,6 +3,7 @@
   <meta charset="utf-8">
   <meta name="description" content="">
   <meta name="author" content="">
+  <meta name="viewport" content="initial-scale=1" />
 
   <base href="/">
 
@@ -13,7 +14,7 @@
   <link rel="stylesheet" href="/node_modules/angular-material/angular-material.css"/>
   <link rel="stylesheet" href="/app/app.css">
 
-  <!--angular and ui-router-->
+  <!--angular stuff-->
   <script src="/node_modules/angular/angular.js"></script>
   <script src="/node_modules/angular-ui-router/release/angular-ui-router.js"></script>
   <script src="/node_modules/angular-animate/angular-animate.js"></script>
@@ -21,49 +22,47 @@
   <script src="/node_modules/angular-messages/angular-messages.js"></script>
   <script src="/node_modules/angular-material/angular-material.js"></script>
 
+  <!--utilities-->
+  <script src="/node_modules/lodash/lodash.js"></script>
+
   <!--our angular app-->
   <script src="/app/app.js"></script>
   <script src="/app/services.js"></script>
   <script src="/app/controllers.js"></script>
 </head>
 
-<body ng-app="nar">
+<body ng-app="nar" layout="column">
       <!-- Container #1 (see wireframe) -->
     <md-toolbar layout="row" class="md-toolbar-tools">
       <h1>NAR</h1>
     </md-toolbar>
 
     <!-- Container #2 -->
-    <div flex layout="row">
+    <div flex layout="row" ng-controller="DefaultController as app">
 
       <!-- Container #3 -->
       <md-sidenav md-is-locked-open="true" class="md-whiteframe-4dp">
-        Sidenav
+        <md-list>
+
+		<md-list-item ng-repeat="person in app.people">
+			<md-button ng-click="app.selectPerson(person)" ng-class="{'selected' : person === app.selected }">
+			  {{person.givenName}} {{person.familyName}}
+			</md-button>
+		</md-list-item>
+
+	  </md-list>
       </md-sidenav>
 
       <!-- Container #4 -->
-      <md-content flex id="content" ng-controller="DefaultController as app">
+      <md-content flex id="content">
         <!-- <div ui-view>Hello, world!</div> -->
 
-        <h3>People</h3>
+        <h2>{{app.selected.givenName}} {{app.selected.familyName}}</h2>
+	    <p>&lt;{{app.selected.email}}&gt;</p>
+
         <ul>
-          <li ng-repeat="person in app.people">{{person.givenName}} {{person.familyName}} &lt;{{person.email}}&gt;</li>
+          <li ng-repeat="(label, link) in app.selected.get_related()">{{label}}: <a href="{{link}}">{{link}}</a></li>
         </ul>
-
-        Selected person: {{app.selected_person.givenName}} {{app.selected_person.familyName}} &lt;{{app.selected_person.email}}&gt;</span>
-
-        <h3>Organizations</h3>
-        <ul>
-          <li ng-repeat="org in app.organizations">{{org.name}}, {{org.address.addressLocality}}, {{org.address.addressCountry}}</li>
-        </ul>
-
-        <h3>Subjects</h3>
-        <ul>
-          <li ng-repeat="subject in app.subjects">
-            #{{subject.name}} - {{subject.species.label}}, {{subject.sex.label}},
-            {{subject.age.value.value}} {{subject.age.value.label}} {{subject.age.period}}</li>
-        </ul>
-
       </md-content>
 
     </div>

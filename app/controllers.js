@@ -7,12 +7,14 @@
 
 angular.module('nar')
 
-.controller('DefaultController', function(People, Organization, Subject) {
+.controller('DefaultController', function($location, People, Organization, Subject) {
     var vm = this;
 
     var error = function(response) {
         console.log(response);
     };
+
+    console.log("LOCATION: " + $location.absUrl());
 
     People.query().then(
         function(people) {
@@ -39,7 +41,7 @@ angular.module('nar')
 
     People.query(filter).then(
         function(person) {
-            vm.selected_person = person[0];
+            vm.selected = person[0];
         },
         error
     );
@@ -50,5 +52,11 @@ angular.module('nar')
         },
         error
     );
+
+    vm.selected = null;
+    vm.selectPerson = function(person) {
+        vm.selected = person;
+        person.get_related();
+    }
 
 })
