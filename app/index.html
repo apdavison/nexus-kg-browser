@@ -11,6 +11,7 @@
 
   <!-- css files -->
   <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,700'>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="/node_modules/angular-material/angular-material.css"/>
   <link rel="stylesheet" href="/app/app.css">
 
@@ -33,8 +34,26 @@
 
 <body ng-app="nar" layout="column">
       <!-- Container #1 (see wireframe) -->
-    <md-toolbar layout="row" class="md-toolbar-tools">
-      <h1>NAR</h1>
+    <md-toolbar layout="row" class="md-toolbar-tools" ng-controller="MenuController as menu">
+
+      <md-menu md-offset="0 40">
+      <md-button class="md-icon-button" aria-label="Menu" ng-click="menu.openMenu($mdMenu, $event)">
+        <md-icon>menu</md-icon>
+      </md-button>
+      <md-menu-content width="4">
+        <md-menu-item>
+          <md-button ng-click="menu.select('/bbp/core/person', $event)">Person</md-button>
+        </md-menu-item>
+        <md-menu-item>
+          <md-button ng-click="menu.select('/bbp/core/organization', $event)">Organization</md-button>
+        </md-menu-item>
+        <md-menu-item>
+          <md-button ng-click="menu.select('/bbp/experiment/subject', $event)">Subject</md-button>
+        </md-menu-item>
+      </md-menu-content>
+      </md-menu>
+
+      <h1 flex>NAR</h1>
     </md-toolbar>
 
     <!-- Container #2 -->
@@ -44,9 +63,9 @@
       <md-sidenav md-is-locked-open="true" class="md-whiteframe-4dp">
         <md-list>
 
-		<md-list-item ng-repeat="person in app.people">
-			<md-button ng-click="app.selectPerson(person)" ng-class="{'selected' : person === app.selected }">
-			  {{person.givenName}} {{person.familyName}}
+		<md-list-item ng-repeat="instance in app.instances">
+			<md-button ng-click="app.selectInstance(instance)" ng-class="{'selected' : instance === app.selected }">
+			  {{instance.get_label()}}
 			</md-button>
 		</md-list-item>
 
@@ -57,8 +76,7 @@
       <md-content flex id="content">
         <!-- <div ui-view>Hello, world!</div> -->
 
-        <h2>{{app.selected.givenName}} {{app.selected.familyName}}</h2>
-	    <p>&lt;{{app.selected.email}}&gt;</p>
+        <h2>{{app.selected.get_label()}}</h2>
 
         <ul>
           <li ng-repeat="(label, link) in app.selected.get_related()">{{label}}: <a href="{{link}}">{{link}}</a></li>

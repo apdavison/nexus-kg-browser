@@ -13,6 +13,8 @@ angular.module('nar')
     };
 
     return function (collection_uri) {
+        console.log("Constructing a resource for " + collection_uri);
+
         //a constructor for new resources
         var Resource = function (data) {
             angular.extend(this, data);
@@ -49,6 +51,19 @@ angular.module('nar')
                 //console.log(related);
                 return related;
             }
+
+            instance.get_label = function() {
+                var label = instance["@id"];
+                if (instance.hasOwnProperty('name')) {
+                    label = instance.name;
+                } else if (instance.hasOwnProperty('familyName')) {
+                    label = instance.givenName + " " + instance.familyName;
+                } else if (instance.hasOwnProperty('label')) {
+                    label = instance.label
+                }
+                return label;
+            }
+
             return instance;
         };
 
@@ -82,15 +97,4 @@ angular.module('nar')
         }
         return Resource
     };
-})
-.factory('People', function (KGResource) {
-    return KGResource('https://nexus.humanbrainproject.org/v0/data/bbp/core/person/v0.1.0');
-})
-.factory('Organization', function (KGResource) {
-    return KGResource('https://nexus.humanbrainproject.org/v0/data/bbp/core/organization/v0.1.0');
-})
-.factory('Subject', function (KGResource) {
-    return KGResource('https://nexus.humanbrainproject.org/v0/data/bbp/experiment/subject/v0.1.0');
-})
-
-;
+});
