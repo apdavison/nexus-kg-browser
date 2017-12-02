@@ -29,13 +29,20 @@ angular.module('nar')
         );
     }
 
+    vm.show_readme = false;
+    vm.base_url = base_url;
     vm.selected = null;
     vm.selectInstance = function(instance) {
         vm.selected = instance;
     }
 
     $rootScope.$on('$locationChangeSuccess', function(event, url, oldUrl, state, oldState) {
-        get_instances();
+        if ($location.url() && $location.url() != "/") {  // todo: should match against a pattern
+            vm.show_readme = false;
+            get_instances();
+        } else {
+            vm.show_readme = true;
+        }
     });
 
 })

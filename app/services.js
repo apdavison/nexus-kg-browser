@@ -24,14 +24,33 @@ angular.module('nar')
         collection_uri += "?deprecated=False";
 
         var Instance = function(response) {
-            var instance = response.data;
+            var instance = {
+                data: response.data,
+                id: response.data["@id"],
+                attributes: []
+            };
+
+            var is_valid = function(name) {
+                return (['@context', 'deprecated', 'rev', 'links', '@type', '@id'].indexOf(name) < 0);
+            };
+
+            for (var attribute in instance.data) {
+                // skip loop if the property is from prototype
+                if (!instance.data.hasOwnProperty(attribute)) continue;
+                if (is_valid(attribute)) {
+                    instance.attributes.push({
+                        label: attribute,
+                        value: instance.data[attribute]
+                    });
+                }
+            }
 
             instance.get_related = function() {
                 var related = {};
 
-                var traverse = function(instance, parent_attribute) {
+                var traverse = function(data, parent_attribute) {
                     // traverse - requires lodash
-                    _.forIn(instance, function (value, attribute) {
+                    _.forIn(data, function (value, attribute) {
                         if (parent_attribute && attribute === "@id") {
                             related[parent_attribute] = value;
                         } else if (['@context', 'deprecated', 'rev', 'links', '@type'].indexOf(attribute) < 0) {
@@ -47,19 +66,19 @@ angular.module('nar')
                         }
                     });
                 };
-                traverse(instance, null);
+                traverse(instance.data, null);
                 //console.log(related);
                 return related;
             }
 
             instance.get_label = function() {
-                var label = instance["@id"];
-                if (instance.hasOwnProperty('name')) {
-                    label = instance.name;
-                } else if (instance.hasOwnProperty('familyName')) {
-                    label = instance.givenName + " " + instance.familyName;
-                } else if (instance.hasOwnProperty('label')) {
-                    label = instance.label
+                var label = instance.data["@id"];
+                if (instance.data.hasOwnProperty('name')) {
+                    label = instance.data.name;
+                } else if (instance.data.hasOwnProperty('familyName')) {
+                    label = instance.data.givenName + " " + instance.data.familyName;
+                } else if (instance.data.hasOwnProperty('label')) {
+                    label = instance.data.label
                 }
                 return label;
             }
@@ -67,7 +86,7 @@ angular.module('nar')
             return instance;
         };
 
-        Resource.query = function(filter) {
+        Resource.query = function(filter) {  // todo: this only returns the first 10 items
             if (filter) {
                 collection_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
             }

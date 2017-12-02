@@ -7,7 +7,7 @@
 
   <base href="/">
 
-  <title>NAR</title>
+  <title>Nexus Knowledge Graph Browser</title>
 
   <!-- css files -->
   <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:400,700'>
@@ -47,7 +47,7 @@
       </md-menu-content>
       </md-menu>
 
-      <h1 flex>NAR</h1>
+      <h1 flex>Nexus Knowledge Graph</h1>
     </md-toolbar>
 
     <!-- Container #2 -->
@@ -55,7 +55,7 @@
 
       <!-- Container #3 -->
       <md-sidenav md-is-locked-open="true" class="md-whiteframe-4dp">
-        <md-list>
+        <md-list ng-if="app.instances">
 
 		<md-list-item ng-repeat="instance in app.instances">
 			<md-button ng-click="app.selectInstance(instance)" ng-class="{'selected' : instance === app.selected }">
@@ -64,17 +64,28 @@
 		</md-list-item>
 
 	  </md-list>
+
+        <div ng-hide="app.instances.length"><md-button>No instances</md-button></div>
       </md-sidenav>
 
       <!-- Container #4 -->
       <md-content flex id="content">
         <!-- <div ui-view>Hello, world!</div> -->
+        <div ng-show="app.show_readme">
+          <p>Welcome to the Nexus Knowledge Graph browser. You are browsing <b>{{app.base_url}}</b></p>
+          <p>To get started, select an instance type from the drop-down menu (top-left)</p>
+        </div>
 
-        <h2>{{app.selected.get_label()}}</h2>
+        <h2 class="md-display-1">{{app.selected.get_label()}}</h2>
+        <h3 class="md-caption">{{app.selected.id}}</h3>
 
-        <ul>
-          <li ng-repeat="(label, link) in app.selected.get_related()">{{label}}: <a href="{{link}}">{{link}}</a></li>
-        </ul>
+        <md-list>
+          <md-list-item ng-repeat="attribute in app.selected.attributes" layout="row" ng-class-odd="'odd'" ng-class-even="'even'">
+            <span flex="20">{{attribute.label}}</span>
+            <span flex>{{attribute.value}}</span>
+          </md-list-item>
+        </md-list>
+
       </md-content>
 
     </div>
