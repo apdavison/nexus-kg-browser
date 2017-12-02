@@ -7,7 +7,32 @@
 
 angular.module('nar')
 
-.factory("KGResource", function($http, $q) {
+.service("PathHandler", function() {
+    var parser = document.createElement('a');
+
+    var get_instance_type_and_id = function(parts) {
+        var type_id = "/" + parts.slice(0, 3).join("/");
+        var instance_id = null;
+        if (parts.length > 3) {
+            instance_id = parts.join("/");
+        }
+        return {type: type_id, id: instance_id};
+    };
+
+    var PathHandler = {
+        extract_path_from_uri: function(uri) { // assumes uri is a schema uri, need to generalize
+            parser.href = uri;
+            var full_path = parser.pathname;
+            return get_instance_type_and_id(full_path.split("/").slice(3));
+        },
+        extract_path_from_location: function(location) {
+            return get_instance_type_and_id(location.split("/").slice(1));
+        }
+    }
+    return PathHandler;
+})
+
+.factory("KGResource", function($http, $q, PathHandler) {
     var error = function(response) {
         console.log(response);
     };
@@ -27,7 +52,8 @@ angular.module('nar')
             var instance = {
                 data: response.data,
                 id: response.data["@id"],
-                attributes: []
+                attributes: [],
+                path: PathHandler.extract_path_from_uri(response.data["@id"])
             };
 
             var is_valid = function(name) {
@@ -117,7 +143,7 @@ angular.module('nar')
         return Resource
     };
 })
-.service("KGIndex", function($http) {
+.service("KGIndex", function($http, PathHandler) {
 
     var error = function(response) {
         console.log(response);
@@ -171,15 +197,9 @@ angular.module('nar')
         },
         paths: function() {
             var extract_paths = function(schema_uris) {
-                var parser = document.createElement('a');
                 var paths = [];
                 for (let uri of schema_uris) {
-                    //console.log(uri);
-                    parser.href = uri;
-                    var full_path = parser.pathname;
-                    // remove "v0/schema" from the start and version from the end
-                    var path = "/" + full_path.split("/").slice(3, 6).join("/");
-                    paths.push(path);
+                    paths.push(PathHandler.extract_path_from_uri(uri).type);
                 }
                 return paths;
             }
