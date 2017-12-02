@@ -97,4 +97,81 @@ angular.module('nar')
         }
         return Resource
     };
-});
+})
+.service("KGIndex", function($http) {
+
+    var error = function(response) {
+        console.log(response);
+    };
+
+    var config = {};
+
+    var KGIndex = {
+        organizations: function() {
+            return $http.get('https://nexus.humanbrainproject.org/v0/organizations/', config).then(
+                function(response) {
+                    var orgs = [];
+                    for (let result of response.data.results) {
+                        orgs.push(result.resultId);
+                    }
+                    return orgs;
+                },
+                error);
+        },
+        domains: function() {  // todo: allow to restrict to a specific organization
+            return $http.get('https://nexus.humanbrainproject.org/v0/domains/', config).then(
+                function(response) {
+                    var domains = [];
+                    for (let result of response.data.results) {
+                        domains.push(result.resultId);
+                    }
+                    return domains;
+                },
+                error);
+        },
+        schema_uris: function() {  // todo: allow to restrict to a specific organization or domain
+            var get_next = function(next, schemas) {
+                console.log(next);
+                return $http.get(next, config).then(
+                    function(response) {
+                        for (let result of response.data.results) {
+                            schemas.push(result.resultId);
+                        }
+                        // check if there's more data to come
+                        for (let link of response.data.links) {
+                            if (link.rel === "next") {
+                                schemas = get_next(link.href, schemas);
+                            }
+                        }
+                        return schemas
+                    },
+                    error);
+            }
+
+            return get_next('https://nexus.humanbrainproject.org/v0/schemas/?from=0&size=50', []);
+        },
+        paths: function() {
+            var extract_paths = function(schema_uris) {
+                var parser = document.createElement('a');
+                var paths = [];
+                for (let uri of schema_uris) {
+                    //console.log(uri);
+                    parser.href = uri;
+                    var full_path = parser.pathname;
+                    // remove "v0/schema" from the start and version from the end
+                    var path = "/" + full_path.split("/").slice(3, 6).join("/");
+                    paths.push(path);
+                }
+                return paths;
+            }
+
+            return this.schema_uris().then(
+                extract_paths,
+                error
+            )
+        }
+    };
+
+    return KGIndex;
+})
+;

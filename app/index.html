@@ -41,14 +41,8 @@
         <md-icon>menu</md-icon>
       </md-button>
       <md-menu-content width="4">
-        <md-menu-item>
-          <md-button ng-click="menu.select('/bbp/core/person', $event)">Person</md-button>
-        </md-menu-item>
-        <md-menu-item>
-          <md-button ng-click="menu.select('/bbp/core/organization', $event)">Organization</md-button>
-        </md-menu-item>
-        <md-menu-item>
-          <md-button ng-click="menu.select('/bbp/experiment/subject', $event)">Subject</md-button>
+        <md-menu-item ng-repeat="type in menu.instance_types">
+          <md-button ng-click="menu.select(type, $event)">{{menu.get_type_name(type)}}</md-button>
         </md-menu-item>
       </md-menu-content>
       </md-menu>

@@ -40,18 +40,35 @@ angular.module('nar')
 
 })
 
-.controller('MenuController', function($location) {
+.controller('MenuController', function($location, KGIndex) {
+    var vm = this;
     var originatorEv;
 
-    this.openMenu = function($mdMenu, ev) {
+    vm.openMenu = function($mdMenu, ev) {
       originatorEv = ev;
       $mdMenu.open(ev);
     };
 
-    this.select = function(collection_uri, ev) {
+    vm.select = function(collection_uri, ev) {
       console.log(collection_uri);
       $location.url(collection_uri);
       originatorEv = null;
+    };
+
+    vm.get_type_name = function(type_path) {
+        //return type_path.split("/")[3];
+        return type_path;
     }
+
+    var error = function(response) {
+        console.log(response);
+    };
+    KGIndex.paths().then(
+        function(response) {
+            console.log(response);
+            vm.instance_types = response;
+        },
+        error
+    );
 
 });
