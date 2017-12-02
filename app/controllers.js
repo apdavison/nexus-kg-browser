@@ -43,7 +43,37 @@ angular.module('nar')
     vm.selectInstance = function(instance) {
         vm.selected = instance;
         $location.url(instance.path.id);
-    }
+    };
+
+    vm.attributeType = function(attribute) {
+        if (attribute.label === "age") {  // temporary hack. Should use schema for all these type determinations
+            return "age";
+        } else if (attribute.label === "address") {
+            return "address";
+        } else if (attribute.value["@id"]) {
+            if (attribute.value["@id"].includes(base_url)) {
+                return "internal-link";
+            } else {
+                return "external-link";
+            }
+        } else if (["string", "number", "boolean"].indexOf(typeof(attribute.value)) < 0) {
+            return "literal";
+        } else {
+            return "object";
+        }
+    };
+
+    vm.resolveId = function(id) {
+        return vm.selected.resolveId(id);
+    };
+
+    vm.pathFromId = function(uri) {
+        return PathHandler.extract_path_from_uri(uri);
+    };
+
+    vm.switchTo = function(uri) {
+        $location.url(PathHandler.extract_path_from_uri(uri).id);
+    };
 
     $rootScope.$on('$locationChangeSuccess', function(event, url, oldUrl, state, oldState) {
         if ($location.url() && $location.url() != "/") {  // todo: should match against a pattern
@@ -53,6 +83,8 @@ angular.module('nar')
             if (path.type != current_type) {
                 get_instances(path.type, path.id);
                 current_type = path.type;
+            } else {
+                vm.selected = vm.instances.filter(function(instance) {return instance.path.id === path.id})[0];
             }
         } else {
             vm.show_readme = true;

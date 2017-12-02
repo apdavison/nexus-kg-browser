@@ -40,7 +40,7 @@ angular.module('nar')
     return function (collection_uri) {
         console.log("Constructing a resource for " + collection_uri);
 
-        //a constructor for new resources
+        // a constructor for new resources
         var Resource = function (data) {
             angular.extend(this, data);
         };
@@ -52,6 +52,7 @@ angular.module('nar')
             var instance = {
                 data: response.data,
                 id: response.data["@id"],
+                context: response.data["@context"],
                 attributes: [],
                 path: PathHandler.extract_path_from_uri(response.data["@id"])
             };
@@ -64,37 +65,12 @@ angular.module('nar')
                 // skip loop if the property is from prototype
                 if (!instance.data.hasOwnProperty(attribute)) continue;
                 if (is_valid(attribute)) {
+                    var value = instance.data[attribute];
                     instance.attributes.push({
                         label: attribute,
-                        value: instance.data[attribute]
+                        value: value
                     });
                 }
-            }
-
-            instance.get_related = function() {
-                var related = {};
-
-                var traverse = function(data, parent_attribute) {
-                    // traverse - requires lodash
-                    _.forIn(data, function (value, attribute) {
-                        if (parent_attribute && attribute === "@id") {
-                            related[parent_attribute] = value;
-                        } else if (['@context', 'deprecated', 'rev', 'links', '@type'].indexOf(attribute) < 0) {
-                            if (_.isArray(value)) {
-                                value.forEach(function(element) {
-                                    if (_.isObject(element)) {
-                                        traverse(element, attribute); // to fix: subsequent elements will overwrite the first one in `related`
-                                    }
-                                });
-                            } else if (_.isObject(value)) {
-                                traverse(value, attribute);
-                            }
-                        }
-                    });
-                };
-                traverse(instance.data, null);
-                //console.log(related);
-                return related;
             }
 
             instance.get_label = function() {
@@ -104,10 +80,22 @@ angular.module('nar')
                 } else if (instance.data.hasOwnProperty('familyName')) {
                     label = instance.data.givenName + " " + instance.data.familyName;
                 } else if (instance.data.hasOwnProperty('label')) {
-                    label = instance.data.label
+                    label = instance.data.label;
+                } else {
+                    label = PathHandler.extract_path_from_uri(label).id;
                 }
                 return label;
-            }
+            };
+
+            instance.resolveId = function(id) {
+                var prefix = id.split(":")[0];
+                var suffix = id.split(":")[1];
+                if (prefix === "http" || prefix === "https") {
+                    return id;
+                } else {
+                    return instance.context[prefix] + suffix;  // todo: may need to recurse within context to get final URI
+                }
+            };
 
             return instance;
         };
@@ -140,7 +128,7 @@ angular.module('nar')
                 },
                 error);
         }
-        return Resource
+        return Resource;
     };
 })
 .service("KGIndex", function($http, PathHandler) {
