@@ -1,2 +1,2 @@
-# Neural Activity Resource app
+# Simple Nexus Knowledge Graph browser
 
