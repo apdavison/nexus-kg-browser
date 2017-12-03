@@ -119,14 +119,30 @@ angular.module('nar')
             if (filter) {
                 collection_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
             }
-            return $http.get(collection_uri, config).then(
-                // on retrieving the list of instance URIs, we...
-                function(response) {
-                    // ...construct a list of http promises, then ...
-                    var promises = [];
-                    for (let result of response.data.results) {
-                        promises.push($http.get(result.resultId, config));
-                    }
+
+            var get_next = function(next, promises) {
+                // on retrieving the list of instance URIs, we
+                // construct a list of http promises, then ...
+                console.log(next);
+                return $http.get(next, config).then(
+                    function(response) {
+                        for (let result of response.data.results) {
+                            promises.push($http.get(result.resultId, config));
+                        }
+                        // check if there's more data to come
+                        for (let link of response.data.links) {
+                            if (link.rel === "next") {
+                                promises = get_next(link.href, promises);
+                            }
+                        }
+                        return promises
+                    },
+                    error);
+
+            };
+
+            return get_next(collection_uri, []).then(
+                function(promises) {
                     // ... when they all resolve, we put the data
                     // into an array, which is returned when the promise
                     // is resolved
@@ -194,7 +210,7 @@ angular.module('nar')
                         return schemas
                     },
                     error);
-            }
+            };
 
             return get_next('https://nexus.humanbrainproject.org/v0/schemas/?from=0&size=50', []);
         },
