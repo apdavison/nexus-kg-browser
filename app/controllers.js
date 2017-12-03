@@ -72,8 +72,16 @@ angular.module('nar')
             } else {
                 return "external-link";
             }
-        } else if (["string", "number", "boolean"].indexOf(typeof(attribute.value)) < 0) {
+        } else if (attribute.value["@type"] === "QuantitativeValue" ) {
+            return "quantity";
+        } else if (["string", "number", "boolean"].indexOf(typeof(attribute.value)) >= 0) {
             return "literal";
+        } else if (Array.isArray(attribute.value)) {
+            if (attribute.value[0]["@id"]) {
+                return "list-of-links"  // assume internal for now
+            } else {
+                return "list"
+            }
         } else {
             return "object";
         }

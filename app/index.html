@@ -81,7 +81,10 @@
           <md-list-item ng-repeat="attribute in app.selected.attributes" layout="row" ng-class-odd="'odd'" ng-class-even="'even'">
             <span flex="20">{{attribute.label}}</span>
             <div ng-switch="app.attributeType(attribute)">
-              <div flex ng-switch-when="internal-link"><md-icon>chevron_right</md-icon><md-button ng-click="app.switchTo(attribute.value['@id'])" class="md-primary">{{app.pathFromId(attribute.value['@id']).id}}</md-button></div>
+              <div flex ng-switch-when="internal-link">
+                <md-icon>chevron_right</md-icon>
+                <md-button ng-click="app.switchTo(attribute.value['@id'])" class="md-primary">{{app.pathFromId(attribute.value['@id']).id}}</md-button>
+              </div>
               <div flex ng-switch-when="external-link">
                 {{attribute.value.label}}
                 <md-button href="{{app.resolveId(attribute.value['@id'])}}"
@@ -91,7 +94,12 @@
                     <md-icon>launch</md-icon>
                 </md-button>
               </div>
+              <div flex ng-switch-when="list-of-links">
+                <md-icon>chevron_right</md-icon>
+                <md-button ng-repeat="subattr in attribute.value" ng-click="app.switchTo(subattr['@id'])" class="md-primary">{{app.pathFromId(subattr['@id']).id}}</md-button>
+              </div>
               <div flex ng-switch-when="literal">{{attribute.value}}</div>
+              <div flex ng-switch-when="quantity">{{attribute.value.value}} {{attribute.value.label}}</div>
               <div flex ng-switch-when="age">{{attribute.value.value.value}} {{attribute.value.value.label}} ({{attribute.value.period.toLowerCase()}})</div>
               <div flex ng-switch-when="address">{{attribute.value.addressLocality}}, {{attribute.value.addressCountry}}</div>
               <div flex ng-switch-default>{{attribute.value}}</div>
