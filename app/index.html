@@ -45,7 +45,7 @@
       </md-menu-content>
       </md-menu>
 
-      <h1 flex>Nexus Knowledge Graph</h1>
+      <h1 flex><a href="/app">Nexus Knowledge Graph</a></h1>
     </md-toolbar>
 
     <!-- Container for sidebar and main content -->
@@ -72,6 +72,7 @@
         <div ng-show="app.show_readme">
           <p>Welcome to the Nexus Knowledge Graph browser. You are browsing <b>{{app.base_url}}</b></p>
           <p>To get started, select an instance type from the drop-down menu (top-left)</p>
+          <p>To report bugs or suggest improvements, please <a href="https://github.com/apdavison/nexus-kg-browser/issues" target="_blank">open an issue</a>.</p>
         </div>
 
         <h2 class="md-display-1">{{app.selected.get_label()}}</h2>

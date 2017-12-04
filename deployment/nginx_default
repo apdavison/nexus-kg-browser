@@ -1,0 +1,17 @@
+server {
+	root /usr/share/nginx/html;
+	index index.html;
+
+    listen 443 ssl;
+    ssl_certificate     /etc/letsencrypt/live/nexus-app.brainsimulation.eu/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/nexus-app.brainsimulation.eu/privkey.pem;
+
+	location / {
+	}
+
+	location /app/ {
+	}
+
+	location /node_modules/ {
+	}
+}
