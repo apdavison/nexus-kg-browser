@@ -10,6 +10,7 @@
   "license": "Apache License version 2.0",
   "dependencies": {
     "angular": "^1.6.7",
+    "angular-aria": "^1.6.7",
     "angular-material": "^1.1.5"
   },
   "devDependencies": {

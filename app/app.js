@@ -23,7 +23,10 @@ Author: Andrew P. Davison, UNIC, CNRS
 
   angular.module('nar', [
     //'ui.router',
-    'ngMaterial'
+    'ngMaterial',
+    'ngAnimate',
+    'ngAria',
+    'ngMessages'
   ])
   //.config(function($urlRouterProvider) {
   //  $urlRouterProvider.otherwise("/");
