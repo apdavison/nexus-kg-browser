@@ -25,7 +25,7 @@ angular.module('nar')
 
 .controller('DefaultController', function($location, $rootScope, KGResource, PathHandler, bbpOidcSession) {
     var vm = this;
-    var base_url = "https://nexus.humanbrainproject.org/v0/";
+    var base_url = "https://nexus-int.humanbrainproject.org/v0/";
 
     var error = function(response) {
         console.log(response);

@@ -23,7 +23,7 @@ describe('PathHandler service', function() {
             expect(PathHandler.extract_path_from_uri).toBeDefined();
         });
         it('should parse out type and instance parts', function() {
-            expect(PathHandler.extract_path_from_uri('https://nexus.humanbrainproject.org/v0/data/bbp/experiment/patchedcellcollection/v0.1.0/3ce21161-7c08-44eb-b367-f01ed1e891be'))
+            expect(PathHandler.extract_path_from_uri('https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/patchedcellcollection/v0.1.0/3ce21161-7c08-44eb-b367-f01ed1e891be'))
             .toEqual({
                 type: '/bbp/experiment/patchedcellcollection',
                 id: 'bbp/experiment/patchedcellcollection/v0.1.0/3ce21161-7c08-44eb-b367-f01ed1e891be'

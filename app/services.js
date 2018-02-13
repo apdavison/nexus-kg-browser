@@ -117,7 +117,7 @@ angular.module('nar')
             return instance;
         };
 
-        Resource.query = function(filter) {  // todo: this only returns the first 10 items
+        Resource.query = function(filter) {
             if (filter) {
                 collection_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
             }
@@ -132,10 +132,8 @@ angular.module('nar')
                             promises.push($http.get(result.resultId, config));
                         }
                         // check if there's more data to come
-                        for (let link of response.data.links) {
-                            if (link.rel === "next") {
-                                promises = get_next(link.href, promises);
-                            }
+                        if (response.data.links.next) {
+                            promises = get_next(response.data.links.next, promises);
                         }
                         return promises
                     },
@@ -176,7 +174,7 @@ angular.module('nar')
 
     var KGIndex = {
         organizations: function() {
-            return $http.get('https://nexus.humanbrainproject.org/v0/organizations/', config).then(
+            return $http.get('https://nexus-int.humanbrainproject.org/v0/organizations/', config).then(
                 function(response) {
                     var orgs = [];
                     for (let result of response.data.results) {
@@ -187,7 +185,7 @@ angular.module('nar')
                 error);
         },
         domains: function() {  // todo: allow to restrict to a specific organization
-            return $http.get('https://nexus.humanbrainproject.org/v0/domains/', config).then(
+            return $http.get('https://nexus-int.humanbrainproject.org/v0/domains/', config).then(
                 function(response) {
                     var domains = [];
                     for (let result of response.data.results) {
@@ -206,17 +204,15 @@ angular.module('nar')
                             schemas.push(result.resultId);
                         }
                         // check if there's more data to come
-                        for (let link of response.data.links) {
-                            if (link.rel === "next") {
-                                schemas = get_next(link.href, schemas);
-                            }
+                        if (response.data.links.next) {
+                            schemas = get_next(response.data.links.next, schemas);
                         }
                         return schemas
                     },
                     error);
             };
 
-            return get_next('https://nexus.humanbrainproject.org/v0/schemas/?from=0&size=50', []);
+            return get_next('https://nexus-int.humanbrainproject.org/v0/schemas/?from=0&size=50', []);
         },
         paths: function() {
             var extract_paths = function(schema_uris) {
