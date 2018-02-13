@@ -58,7 +58,7 @@
       <md-sidenav md-is-locked-open="true" class="md-whiteframe-4dp">
         <md-list ng-if="app.instances">
 
-		<md-list-item ng-repeat="instance in app.instances">
+		<md-list-item ng-repeat="instance in app.instances | orderBy:'get_label()'">
 			<md-button ng-click="app.selectInstance(instance)" ng-class="{'selected' : instance === app.selected }" md-truncate>
 			  {{instance.get_label()}}
 			</md-button>
