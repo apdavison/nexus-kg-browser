@@ -47,7 +47,7 @@ angular.module('nar')
     return PathHandler;
 })
 
-.factory("KGResource", function($http, $q, PathHandler) {
+.factory("KGResource", function($http, $q, PathHandler, bbpOidcSession) {
     var error = function(response) {
         console.log(response);
     };
@@ -60,7 +60,9 @@ angular.module('nar')
             angular.extend(this, data);
         };
 
-        var config = {};
+        var config = {
+            Authorization: "Bearer " + bbpOidcSession.token()
+        };
         collection_uri += "?deprecated=False";
 
         var Instance = function(response) {
@@ -162,13 +164,15 @@ angular.module('nar')
         return Resource;
     };
 })
-.service("KGIndex", function($http, PathHandler) {
+.service("KGIndex", function($http, PathHandler, bbpOidcSession) {
 
     var error = function(response) {
         console.log(response);
     };
 
-    var config = {};
+    var config = {
+        Authorization: "Bearer " + bbpOidcSession.token()
+    };
 
     var KGIndex = {
         organizations: function() {

@@ -23,7 +23,7 @@ Author: Andrew P. Davison, UNIC, CNRS
 
 angular.module('nar')
 
-.controller('DefaultController', function($location, $rootScope, KGResource, PathHandler) {
+.controller('DefaultController', function($location, $rootScope, KGResource, PathHandler, bbpOidcSession) {
     var vm = this;
     var base_url = "https://nexus.humanbrainproject.org/v0/";
 
@@ -32,6 +32,10 @@ angular.module('nar')
     };
 
     console.log("LOCATION: " + $location.url());
+
+    // controller actions to login and logout
+    vm.handleLogin = function() {bbpOidcSession.login();}
+    vm.handleLogout = function() {bbpOidcSession.logout();}
 
     var get_instances = function(type_id, focus) {
         var Instances = KGResource(base_url + "data" + type_id);
