@@ -21,6 +21,7 @@ module.exports = function(config) {
         './node_modules/angular-messages/angular-messages.js',
         './node_modules/angular-material/angular-material.js',
         './node_modules/angular-mocks/angular-mocks.js',
+        './app/mock.js',
         './app/app.js',
         './app/services.js',
         './app/services.spec.js',

@@ -4,6 +4,18 @@ describe('DefaultController', function() {
 
     beforeEach(angular.mock.module('nar'));
 
+    // Provide mock dependencies
+    beforeEach(function () {
+
+        mockbbpOidcSession = {
+            
+        };
+
+        module(function ($provide) {
+            $provide.value('bbpOidcSession', mockbbpOidcSession);
+        });
+    });
+
     beforeEach(inject(angular.mock.inject(function(_$controller_, _$rootScope_, _$location_) {
         $rootScope = _$rootScope_;
         $scope = $rootScope.$new();
@@ -24,7 +36,7 @@ describe('DefaultController', function() {
 
     it('should return type of attribute of the instance', function() {
         expect(controller.attributeType({'label':'age'})).toBe('age');
-        expect(controller.attributeType({'value':{"@id":"https://nexus.humanbrainproject.org/v0/"}})).toBe('internal-link');
+        expect(controller.attributeType({'value':{"@id":"https://nexus-int.humanbrainproject.org/v0/"}})).toBe('internal-link');
         expect(controller.attributeType({'value':{"@id":"/"}})).toBe('external-link');
         expect(controller.attributeType({'value':{"@type":"QuantitativeValue"}})).toBe('quantity');
         expect(controller.attributeType({'value':4321})).toBe('literal');
@@ -32,7 +44,7 @@ describe('DefaultController', function() {
     });
 
     it('should return path of instance', function() {
-        controller.switchTo("https://nexus.humanbrainproject.org/v0/data/bbp/experiment/patchedcellcollection/v0.1.0/3ce21161-7c08-44eb-b367-f01ed1e891be");
+        controller.switchTo("https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/patchedcellcollection/v0.1.0/3ce21161-7c08-44eb-b367-f01ed1e891be");
         expect($location.url()).toEqual('/bbp/experiment/patchedcellcollection/v0.1.0/3ce21161-7c08-44eb-b367-f01ed1e891be');
     });
 });
@@ -43,6 +55,20 @@ describe('MenuController', function() {
     var $controller, $rootScope, controller, $location, $scope;
 
     beforeEach(angular.mock.module('nar'));
+
+    // Provide mock dependencies
+    beforeEach(function () {
+
+        mockbbpOidcSession = {
+            token: function() {
+                return "footoken"
+            }
+        };
+
+        module(function ($provide) {
+            $provide.value('bbpOidcSession', mockbbpOidcSession);
+        });
+    });
 
     beforeEach(inject(angular.mock.inject(function(_$controller_, _$rootScope_, _$location_) {
         $rootScope = _$rootScope_;

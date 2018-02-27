@@ -10,6 +10,20 @@ describe('PathHandler service', function() {
 
     beforeEach(angular.mock.module('nar'));
 
+    // Provide mock dependencies
+    beforeEach(function () {
+
+        mockbbpOidcSession = {
+            token: function() {
+                return "footoken"
+            }
+        };
+
+        module(function ($provide) {
+            $provide.value('bbpOidcSession', mockbbpOidcSession);
+        });
+    });
+
     beforeEach(inject(function(_PathHandler_) {
         PathHandler = _PathHandler_;
     }));
@@ -53,6 +67,20 @@ describe('KGResource Spec', function () {
 
     beforeEach(angular.mock.module('nar'));
 
+    // Provide mock dependencies
+    beforeEach(function () {
+
+        mockbbpOidcSession = {
+            token: function() {
+                return "footoken"
+            }
+        };
+
+        module(function ($provide) {
+            $provide.value('bbpOidcSession', mockbbpOidcSession);
+        });
+    });
+
     beforeEach(inject(function(_KGResource_, _$httpBackend_) {
         KGResource = _KGResource_;
         $httpBackend = _$httpBackend_;
@@ -75,13 +103,13 @@ describe('KGResource Spec', function () {
                 "results":[],
                 "links":[{
                     "rel":"self",
-                    "href":"https://nexus.humanbrainproject.org/v0/data/bbp/experiment/brainslicing?deprecated=False"
+                    "href":"https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/brainslicing?deprecated=False"
                     }]
                 };  // this object needs to be updated with a sample result
 
-            $httpBackend.expectGET('https://nexus.humanbrainproject.org/v0/data/bbp/experiment/brainslicing?deprecated=False').respond(r);
+            $httpBackend.expectGET('https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/brainslicing?deprecated=False').respond(r);
 
-            var Instances = KGResource('https://nexus.humanbrainproject.org/v0/data/bbp/experiment/brainslicing');
+            var Instances = KGResource('https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/brainslicing');
 
             Instances.query().then(
                 function(instances) {
@@ -98,6 +126,20 @@ describe('KGIndex service', function() {
     var KGIndex, $httpBackend;
 
     beforeEach(angular.mock.module('nar'));
+
+    // Provide mock dependencies
+    beforeEach(function () {
+
+        mockbbpOidcSession = {
+            token: function() {
+                return "footoken"
+            }
+        };
+
+        module(function ($provide) {
+            $provide.value('bbpOidcSession', mockbbpOidcSession);
+        });
+    });
 
     beforeEach(inject(function(_KGIndex_, _$httpBackend_) {
         KGIndex = _KGIndex_;
@@ -124,20 +166,20 @@ describe('KGIndex service', function() {
             var r = {
                 "total":1,
                 "results":[{
-                    "resultId":"https://nexus.humanbrainproject.org/v0/schemas/shape/core/activity/v0.0.4",
-                    "source":{"@id":"https://nexus.humanbrainproject.org/v0/schemas/shape/core/activity/v0.0.4",
+                    "resultId":"https://nexus-int.humanbrainproject.org/v0/schemas/shape/core/activity/v0.0.4",
+                    "source":{"@id":"https://nexus-int.humanbrainproject.org/v0/schemas/shape/core/activity/v0.0.4",
                         "links":[{
                             "rel":"self",
-                            "href":"https://nexus.humanbrainproject.org/v0/schemas/shape/core/activity/v0.0.4"
+                            "href":"https://nexus-int.humanbrainproject.org/v0/schemas/shape/core/activity/v0.0.4"
                             }]
                         }}],
                 "links":[{
                     "rel":"self",
-                    "href":"https://nexus.humanbrainproject.org/v0/data/bbp/experiment/brainslicing"
+                    "href":"https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/brainslicing"
                     }]
                 };
 
-            $httpBackend.whenGET('https://nexus.humanbrainproject.org/v0/schemas/?from=0&size=50').respond(r);
+            $httpBackend.whenGET('https://nexus-int.humanbrainproject.org/v0/schemas/?from=0&size=50').respond(r);
 
             KGIndex.paths().then(function(response) {
                 expect(response).toEqual(['/shape/core/activity']);
@@ -156,24 +198,24 @@ describe('KGIndex service', function() {
             var r = {
                 "total":1,
                 "results":[{
-                    "resultId":"https://nexus.humanbrainproject.org/v0/organizations/shape",
+                    "resultId":"https://nexus-int.humanbrainproject.org/v0/organizations/shape",
                     "source":{
-                        "@id":"https://nexus.humanbrainproject.org/v0/organizations/shape",
+                        "@id":"https://nexus-int.humanbrainproject.org/v0/organizations/shape",
                         "links":[{
                             "rel":"self",
-                            "href":"https://nexus.humanbrainproject.org/v0/organizations/shape"
+                            "href":"https://nexus-int.humanbrainproject.org/v0/organizations/shape"
                             }]
                         }}],
                 "links":[{
                     "rel":"self",
-                    "href":"https://nexus.humanbrainproject.org/v0/organizations/"
+                    "href":"https://nexus-int.humanbrainproject.org/v0/organizations/"
                     }]
                 };
 
-            $httpBackend.whenGET('https://nexus.humanbrainproject.org/v0/organizations/').respond(r);
+            $httpBackend.whenGET('https://nexus-int.humanbrainproject.org/v0/organizations/').respond(r);
 
             KGIndex.organizations().then(function(response) {
-                expect(response).toEqual(['https://nexus.humanbrainproject.org/v0/organizations/shape']);
+                expect(response).toEqual(['https://nexus-int.humanbrainproject.org/v0/organizations/shape']);
             });
             $httpBackend.flush();
         });
@@ -189,20 +231,20 @@ describe('KGIndex service', function() {
             var r = {
                 "total":1,
                 "results":[{
-                    "resultId":"https://nexus.humanbrainproject.org/v0/domains/shape/core",
+                    "resultId":"https://nexus-int.humanbrainproject.org/v0/domains/shape/core",
                     "source":{
-                        "@id":"https://nexus.humanbrainproject.org/v0/domains/shape/core",
+                        "@id":"https://nexus-int.humanbrainproject.org/v0/domains/shape/core",
                         "links":[{
                             "rel":"self",
-                            "href":"https://nexus.humanbrainproject.org/v0/domains/shape/core"
+                            "href":"https://nexus-int.humanbrainproject.org/v0/domains/shape/core"
                             }]
                         }}]
                 };
 
-            $httpBackend.whenGET('https://nexus.humanbrainproject.org/v0/domains/').respond(r);
+            $httpBackend.whenGET('https://nexus-int.humanbrainproject.org/v0/domains/').respond(r);
 
             KGIndex.domains().then(function(response) {
-                expect(response).toEqual(['https://nexus.humanbrainproject.org/v0/domains/shape/core']);
+                expect(response).toEqual(['https://nexus-int.humanbrainproject.org/v0/domains/shape/core']);
             });
             $httpBackend.flush();
         });
