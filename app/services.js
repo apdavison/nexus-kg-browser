@@ -26,9 +26,9 @@ angular.module('nar')
     var parser = document.createElement('a');
 
     var get_instance_type_and_id = function(parts) {
-        var type_id = "/" + parts.slice(0, 3).join("/");
+        var type_id = "/" + parts.slice(0, 4).join("/");
         var instance_id = null;
-        if (parts.length > 3) {
+        if (parts.length > 4) {
             instance_id = parts.join("/");
         }
         return {type: type_id, id: instance_id};
@@ -47,46 +47,121 @@ angular.module('nar')
     return PathHandler;
 })
 
-.factory("KGResource", function($http, $q, PathHandler, bbpOidcSession) {
+.service("Jsonld", function($http) {
+
     var error = function(response) {
         console.log(response);
     };
 
-    return function (collection_uri) {
-        console.log("Constructing a resource for " + collection_uri);
+    this.flattenContext = function(contexts) {
+        var flattened = {};
+        for (var i = 0; i < contexts.length; i++) {
+            if (typeof contexts[i] === 'string' && contexts[i].startsWith('http')) {
+                $http.get(contexts[i], {}).then(
+                    function(response) {
+                        for (var attrname in response.data) {
+                            if (attrname.indexOf('@') < 0) {
+                                flattened[attrname] = response.data[attrname];
+                            }
+                        }
+                    },
+                    error
+                );
+            } else {
+                for (var attrname in contexts[i]) { 
+                    if (attrname.indexOf('@') < 0) {
+                        flattened[attrname] = contexts[i][attrname]; 
+                    }
+                }
+            }
+        }
+        return flattened;
+    }
 
+    this.resolve = function(term, context) {
+        // context should be flattened
+        
+        // expand the given term as a full URI
+        if (term.startsWith("http")) {
+            return term
+        } else {
+            if (context.hasOwnProperty(term)) {
+                if (typeof(context[term]) === 'string') {
+                    return this.resolve(context[term], context);
+                } else {
+                    return this.resolve(context[term]['@id'], context);
+                }
+            }
+            var parts = term.split(':');
+            var prefix = parts[0];
+            var identifier = parts[1];
+            if (context.hasOwnProperty(prefix)) {
+                return context[prefix] + identifier;
+            }
+            return null;
+        }
+    };
+})
+
+.factory("KGResource", function($http, $q, PathHandler, bbpOidcSession, Jsonld) {
+    var error = function(response) {
+        console.log(response);
+    };
+
+    return function(collection_uri) {
+        console.log("Constructing a resource for " + collection_uri);
+        
         // a constructor for new resources
-        var Resource = function (data) {
+        var Resource = function(data) {
             angular.extend(this, data);
         };
 
         var config = {
             Authorization: "Bearer " + bbpOidcSession.token()
         };
+
+        var schema_uri = collection_uri.replace('data', 'schemas');
+        var schema_properties = {};
         collection_uri += "?deprecated=False";
 
-        var Instance = function(response) {
+        var Instance = function(response, schema_properties) {
             var instance = {
                 data: response.data,
                 id: response.data["@id"],
-                context: response.data["@context"],
-                attributes: [],
+                context: Jsonld.flattenContext(response.data["@context"]),
+                attributes: {},
                 path: PathHandler.extract_path_from_uri(response.data["@id"])
             };
 
             var is_valid = function(name) {
-                return (['@context', 'deprecated', 'rev', 'links', '@type', '@id'].indexOf(name) < 0);
+                return (['@context', 'deprecated', 'nxv:deprecated', 'rev', 'nxv:rev', 'links', '@type', '@id'].indexOf(name) < 0);
             };
+
+            // copy properties/attributes from schema_properties
+            // todo: rename "attribute" to "property" for consistency
+            for (var attribute_uri in schema_properties) {
+                instance.attributes[attribute_uri] = Object.assign({}, schema_properties[attribute_uri]);
+            }
 
             for (var attribute in instance.data) {
                 // skip loop if the property is from prototype
                 if (!instance.data.hasOwnProperty(attribute)) continue;
                 if (is_valid(attribute)) {
-                    var value = instance.data[attribute];
-                    instance.attributes.push({
-                        label: attribute,
-                        value: value
-                    });
+                    var attribute_uri = Jsonld.resolve(attribute, instance.context);
+                    //console.log(attribute_uri);
+                    //console.log(instance.attributes);
+                    if (instance.attributes[attribute_uri]) {
+                        instance.attributes[attribute_uri].value = instance.data[attribute];
+                    } else {
+                        if (attribute_uri == 'http://schema.org/distribution') {
+                            instance.attributes[attribute_uri] = {
+                                name: 'Distribution',
+                                value: instance.data[attribute]  // todo: add @type?
+                            }
+                        } else {
+                            console.log("WARNING: Attribute " + attribute_uri + " is not in the schema");
+                        }
+                    }
                 }
             }
 
@@ -141,27 +216,78 @@ angular.module('nar')
 
             };
 
-            return get_next(collection_uri, []).then(
-                function(promises) {
-                    // ... when they all resolve, we put the data
-                    // into an array, which is returned when the promise
-                    // is resolved
-                    var instances_promise = $q.all(promises).then(
-                        function(responses) {
-                            var instances = [];
-                            for (let response of responses) {
-                                instances.push(Instance(response));
+            var build_properties = function(shape, context) {
+                if (shape.property) {
+                    for (let property of shape.property) {
+                        var property_uri = Jsonld.resolve(property.path, context);
+                        if (schema_properties.hasOwnProperty(property_uri)) {
+                            // merge the two properties
+                            Object.assign(schema_properties[property_uri], property);
+                        } else {
+                            schema_properties[property_uri] = property;
+                        }
+                    }
+                }
+            }
+
+            var get_schema = function() {
+                return $http.get(schema_uri, config).then(
+                    function(response) {
+                        var schema = response.data;
+                        var context = Jsonld.flattenContext(schema["@context"]);
+                        for (let shape of schema.shapes) {
+                            console.log(shape);
+                            if (shape.and) {
+                                for (let parent_shape of shape.and) {
+                                    if (parent_shape.node) {
+                                        var shape_uri = Jsonld.resolve(parent_shape.node, context);
+                                        $http.get(shape_uri, config).then(
+                                            function(response) {
+                                                build_properties(response.data, context);
+                                            },
+                                            error
+                                        );
+                                    } else {
+                                        build_properties(parent_shape, context);
+                                    }
+                                }
+                            } else {
+                                console.log("WARNING: shape not fully processed: " + shape["@id"])
                             }
-                            return instances;
-                        },
-                        error);
-                    return instances_promise;
-                },
-                error);
+                        }
+                    }, 
+                    error
+                );
+            }
+
+            var get_instances = function() {
+                return get_next(collection_uri, []).then(
+                    function(promises) {
+                        // ... when they all resolve, we put the data
+                        // into an array, which is returned when the promise
+                        // is resolved
+                        var instances_promise = $q.all(promises).then(
+                            function(responses) {
+                                var instances = [];
+                                for (let response of responses) {
+                                    instances.push(Instance(response, schema_properties));
+                                }
+                                console.log(instances);
+                                return instances;
+                            },
+                            error);
+                        return instances_promise;
+                    },
+                    error);
+            }
+
+            return get_schema().then(get_instances);
         }
         return Resource;
     };
 })
+
+
 .service("KGIndex", function($http, PathHandler, bbpOidcSession) {
 
     var error = function(response) {
@@ -197,9 +323,13 @@ angular.module('nar')
         },
         schema_uris: function() {  // todo: allow to restrict to a specific organization or domain
             var get_next = function(next, schemas) {
+                console.log("Getting schema URIs");
+                console.log("  with headers: ");
+                console.log(config);
                 console.log(next);
                 return $http.get(next, config).then(
                     function(response) {
+                        //console.log(response);
                         for (let result of response.data.results) {
                             schemas.push(result.resultId);
                         }
@@ -232,4 +362,5 @@ angular.module('nar')
 
     return KGIndex;
 })
+
 ;

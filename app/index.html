@@ -83,7 +83,7 @@
 
         <md-list>
           <md-list-item ng-repeat="attribute in app.selected.attributes" layout="row" ng-class-odd="'odd'" ng-class-even="'even'">
-            <span flex="20">{{attribute.label}}</span>
+            <span flex="20"><md-tooltip md-direction="bottom">{{attribute.description || attribute.name}}</md-tooltip>{{attribute.name}}</span>
             <div ng-switch="app.attributeType(attribute)">
               <div flex ng-switch-when="internal-link">
                 <md-icon>chevron_right</md-icon>

@@ -66,25 +66,27 @@ angular.module('nar')
     };
 
     vm.attributeType = function(attribute) {
-        if (attribute.label === "age") {  // temporary hack. Should use schema for all these type determinations
-            return "age";
-        } else if (attribute.label === "address") {
-            return "address";
-        } else if (attribute.value["@id"]) {
-            if (attribute.value["@id"].includes(base_url)) {
-                return "internal-link";
-            } else {
-                return "external-link";
-            }
-        } else if (attribute.value["@type"] === "QuantitativeValue" ) {
-            return "quantity";
-        } else if (["string", "number", "boolean"].indexOf(typeof(attribute.value)) >= 0) {
-            return "literal";
-        } else if (Array.isArray(attribute.value)) {
-            if (attribute.value[0]["@id"]) {
-                return "list-of-links"  // assume internal for now
-            } else {
-                return "list"
+        if (attribute.path === "nsg:age") {  // todo:  expand 'nsg' to a full URL
+            return "age";  
+        } else if (attribute.value) {
+            if (attribute.value["@id"]) {
+                if (attribute.value["@id"].includes(base_url)) {
+                    return "internal-link";
+                } else {
+                    return "external-link";
+                }
+            } else if (attribute.value["@type"] === "QuantitativeValue" ) {
+                return "quantity";
+            } else if (attribute.value["@type"] === "schema:PostalAddress") { // todo: expand 'schema' to a full URL
+                return "address";
+            } else if (["string", "number", "boolean"].indexOf(typeof(attribute.value)) >= 0) {
+                return "literal";
+            } else if (Array.isArray(attribute.value)) {
+                if (attribute.value[0]["@id"]) {
+                    return "list-of-links"  // assume internal for now
+                } else {
+                    return "list"
+                }
             }
         } else {
             return "object";
