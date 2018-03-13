@@ -119,18 +119,26 @@ angular.module('nar')
         vm.selectInstance(instance);
     }
 
+    vm.editInstance = function(instance) {
+        vm.editMode = true;
+    }
+
     vm.saveInstance = function(instance) {
         instance.save().then(
             function success(response) {
-                instance.id = response.data['@id'];
-                instance.path = PathHandler.extract_path_from_uri(instance.id);
-                instance.saved = true;
+                if (!instance.saved) {
+                    // newly created
+                    instance.id = response.data['@id'];
+                    instance.path = PathHandler.extract_path_from_uri(instance.id);
+                    instance.saved = true;
+                    vm.instances.push(instance);
+                    vm.selectInstance(instance);
+                } else {
+                    // update revision number
+                    instance.data["nxv:rev"] = response.data["nxv:rev"];
+                }
                 vm.editMode = false;
                 console.log("SUCCESS");
-                //console.log(response);
-                //console.log(instance.path.id);
-                vm.instances.push(instance);
-                vm.selectInstance(instance);
             },
             error
         );

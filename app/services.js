@@ -202,7 +202,16 @@ angular.module('nar')
 
             instance.save = function() {
                 if (instance.saved) {
-                    console.log("Warning: Updating existing instances not yet implemented")
+                    var put_url = instance.id + "?rev=" + instance.data["nxv:rev"];
+                    for (var name in instance.attributes) {
+                        if (instance.attributes[name].hasOwnProperty('value')) {
+                            if (instance.attributes[name].value != instance.data[name]) {
+                                instance.data[name] = instance.attributes[name].value;
+                            }
+                        }
+                    }
+                    delete instance.data.links;  //  might want to copy instance.data before removing this
+                    return $http.put(put_url, JSON.stringify(instance.data), config);
                 } else {
                     var post_url = instance.id.slice(0, -4)  // remove '/NEW'
 
@@ -220,7 +229,7 @@ angular.module('nar')
                     }
                     console.log("About to post the following to " + post_url);
                     console.log(JSON.stringify(instance.data, null, 4));
-                    return $http.post(post_url, JSON.stringify(instance.data), config)
+                    return $http.post(post_url, JSON.stringify(instance.data), config);
                 }
             }
 

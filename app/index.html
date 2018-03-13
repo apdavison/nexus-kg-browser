@@ -58,7 +58,9 @@
       <md-sidenav md-is-locked-open="true" class="md-whiteframe-4dp">
         <md-list ng-if="app.instances">
           <md-list-item>
-            <md-button class="md-raised md-primary" ng-click="app.createInstance()">New</md-button>
+            <md-button class="md-icon-button" ng-click="app.createInstance()">
+                <md-icon>add</md-icon>
+            </md-button>
           </md-list-item>
 
           <md-list-item ng-repeat="instance in app.instances | orderBy:'get_label()'">
@@ -81,7 +83,11 @@
           <p>To report bugs or suggest improvements, please <a href="https://github.com/apdavison/nexus-kg-browser/issues" target="_blank">open an issue</a>.</p>
         </div>
 
-        <h2 class="md-display-1">{{app.selected.get_label()}}</h2>
+        <h2 class="md-display-1">{{app.selected.get_label()}} 
+          <md-button ng-if="!app.editMode" class="md-icon-button" aria-label="Menu" ng-click="app.editInstance(app.selected)">
+            <md-icon>create</md-icon>
+          </md-button>
+        </h2>
         <h3 class="md-caption"><a href="{{app.selected.id}}" target="_blank" style="text-decoration: none; color:gray">{{app.selected.id}}</a></h3>
 
         <div ng-if="!app.editMode">
@@ -124,6 +130,7 @@
           </md-input-container>
           <div>
             <md-button type="submit" class="md-raised md-primary" ng-click="app.saveInstance(app.selected)">Submit</md-button>
+            <md-button type="cancel" class="md-raised" ng-click="app.editMode=false">Cancel</md-button>
           </div>
           </form>
         </div>
