@@ -121,17 +121,25 @@ angular.module('nar')
         };
 
         var schema_uri = collection_uri.replace('data', 'schemas');
+        var target_class = null;
         var schema_properties = {};
-        collection_uri += "?deprecated=False";
+        var schema_context = {};
+        var collection_query_uri = collection_uri + "?deprecated=False";
 
-        var Instance = function(response, schema_properties) {
+        var Instance = function(data, schema_properties, target_class) {
             var instance = {
-                data: response.data,
-                id: response.data["@id"],
-                context: Jsonld.flattenContext(response.data["@context"]),
+                data: data,
+                id: data["@id"],
+                type: target_class,
+                context: Jsonld.flattenContext(data["@context"]),
                 attributes: {},
-                path: PathHandler.extract_path_from_uri(response.data["@id"])
+                path: PathHandler.extract_path_from_uri(data["@id"]),
+                saved: true
             };
+
+            if (instance.id.includes('NEW')) {
+                instance.saved = false;
+            }
 
             var is_valid = function(name) {
                 return (['@context', 'deprecated', 'nxv:deprecated', 'rev', 'nxv:rev', 'links', '@type', '@id'].indexOf(name) < 0);
@@ -166,11 +174,14 @@ angular.module('nar')
             }
 
             instance.get_label = function() {
-                var label = instance.data["@id"];
+                // hacky, needs to be cleaned up, resolving context
+                var label = instance.id;
                 if (instance.data.hasOwnProperty('name')) {
                     label = instance.data.name;
                 } else if (instance.data.hasOwnProperty('familyName')) {
                     label = instance.data.givenName + " " + instance.data.familyName;
+                } else if (instance.data.hasOwnProperty('http://schema.org/familyName')) {
+                    label = instance.data['http://schema.org/givenName'] + " " + instance.data['http://schema.org/familyName'];    
                 } else if (instance.data.hasOwnProperty('label')) {
                     label = instance.data.label;
                 } else {
@@ -189,79 +200,109 @@ angular.module('nar')
                 }
             };
 
+            instance.save = function() {
+                if (instance.saved) {
+                    console.log("Warning: Updating existing instances not yet implemented")
+                } else {
+                    var post_url = instance.id.slice(0, -4)  // remove '/NEW'
+
+                    instance.data = {
+                        //'@context': schema_context,
+                        '@context': {  // temporary, fragile work-around
+                            'nsg': "https://bbp-nexus.epfl.ch/vocabs/bbp/neurosciencegraph/core/v0.1.0/"
+                        },
+                        '@type': instance.type
+                    };
+                    for (var name in instance.attributes) {
+                        if (instance.attributes[name].hasOwnProperty('value')) {
+                            instance.data[name] = instance.attributes[name].value;
+                        }
+                    }
+                    console.log("About to post the following to " + post_url);
+                    console.log(JSON.stringify(instance.data, null, 4));
+                    return $http.post(post_url, JSON.stringify(instance.data), config)
+                }
+            }
+
             return instance;
+        };
+
+        var get_next = function(next, promises) {
+            // on retrieving the list of instance URIs, we
+            // construct a list of http promises, then ...
+            console.log(next);
+            return $http.get(next, config).then(
+                function(response) {
+                    for (let result of response.data.results) {
+                        promises.push($http.get(result.resultId, config));
+                    }
+                    // check if there's more data to come
+                    if (response.data.links.next) {
+                        promises = get_next(response.data.links.next, promises);
+                    }
+                    return promises
+                },
+                error);
+
+        };
+
+        var build_properties = function(shape, context) {
+            if (shape.property) {
+                for (let property of shape.property) {
+                    var property_uri = Jsonld.resolve(property.path, context);
+                    if (schema_properties.hasOwnProperty(property_uri)) {
+                        // merge the two properties
+                        Object.assign(schema_properties[property_uri], property);
+                    } else {
+                        schema_properties[property_uri] = property;
+                    }
+                }
+            }
+        }
+
+        var get_schema = function() {
+            return $http.get(schema_uri, config).then(
+                function(response) {
+                    var schema = response.data;
+                    console.log(schema);
+                    var context = Jsonld.flattenContext(schema["@context"]);
+                    for (let shape of schema.shapes) {
+                        console.log(shape);
+                        //schema_context = Jsonld.flattenContext(schema['@context']);
+                        if (shape.targetClass) {
+                            target_class = shape.targetClass;
+                            console.log("Setting target class to " + shape.targetClass);
+                        }
+                        if (shape.and) {
+                            for (let parent_shape of shape.and) {
+                                if (parent_shape.node) {
+                                    var shape_uri = Jsonld.resolve(parent_shape.node, context);
+                                    $http.get(shape_uri, config).then(
+                                        function(response) {
+                                            build_properties(response.data, context);
+                                        },
+                                        error
+                                    );
+                                } else {
+                                    build_properties(parent_shape, context);
+                                }
+                            }
+                        } else {
+                            console.log("WARNING: shape not fully processed: " + shape["@id"])
+                        }
+                    }
+                }, 
+                error
+            );
         };
 
         Resource.query = function(filter) {
             if (filter) {
-                collection_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
-            }
-
-            var get_next = function(next, promises) {
-                // on retrieving the list of instance URIs, we
-                // construct a list of http promises, then ...
-                console.log(next);
-                return $http.get(next, config).then(
-                    function(response) {
-                        for (let result of response.data.results) {
-                            promises.push($http.get(result.resultId, config));
-                        }
-                        // check if there's more data to come
-                        if (response.data.links.next) {
-                            promises = get_next(response.data.links.next, promises);
-                        }
-                        return promises
-                    },
-                    error);
-
-            };
-
-            var build_properties = function(shape, context) {
-                if (shape.property) {
-                    for (let property of shape.property) {
-                        var property_uri = Jsonld.resolve(property.path, context);
-                        if (schema_properties.hasOwnProperty(property_uri)) {
-                            // merge the two properties
-                            Object.assign(schema_properties[property_uri], property);
-                        } else {
-                            schema_properties[property_uri] = property;
-                        }
-                    }
-                }
-            }
-
-            var get_schema = function() {
-                return $http.get(schema_uri, config).then(
-                    function(response) {
-                        var schema = response.data;
-                        var context = Jsonld.flattenContext(schema["@context"]);
-                        for (let shape of schema.shapes) {
-                            console.log(shape);
-                            if (shape.and) {
-                                for (let parent_shape of shape.and) {
-                                    if (parent_shape.node) {
-                                        var shape_uri = Jsonld.resolve(parent_shape.node, context);
-                                        $http.get(shape_uri, config).then(
-                                            function(response) {
-                                                build_properties(response.data, context);
-                                            },
-                                            error
-                                        );
-                                    } else {
-                                        build_properties(parent_shape, context);
-                                    }
-                                }
-                            } else {
-                                console.log("WARNING: shape not fully processed: " + shape["@id"])
-                            }
-                        }
-                    }, 
-                    error
-                );
+                collection_query_uri += "&filter=" + encodeURIComponent(JSON.stringify(filter));
             }
 
             var get_instances = function() {
-                return get_next(collection_uri, []).then(
+                return get_next(collection_query_uri, []).then(
                     function(promises) {
                         // ... when they all resolve, we put the data
                         // into an array, which is returned when the promise
@@ -270,7 +311,7 @@ angular.module('nar')
                             function(responses) {
                                 var instances = [];
                                 for (let response of responses) {
-                                    instances.push(Instance(response, schema_properties));
+                                    instances.push(Instance(response.data, schema_properties, target_class));
                                 }
                                 console.log(instances);
                                 return instances;
@@ -282,7 +323,14 @@ angular.module('nar')
             }
 
             return get_schema().then(get_instances);
+        };
+
+        Resource.create = function() {
+            return Instance({'@id': collection_uri + "/NEW", '@context': {}},
+                            schema_properties,
+                            target_class);
         }
+
         return Resource;
     };
 })

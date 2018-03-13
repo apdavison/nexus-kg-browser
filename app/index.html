@@ -57,14 +57,17 @@
       <!-- Sidebar -->
       <md-sidenav md-is-locked-open="true" class="md-whiteframe-4dp">
         <md-list ng-if="app.instances">
+          <md-list-item>
+            <md-button class="md-raised md-primary" ng-click="app.createInstance()">New</md-button>
+          </md-list-item>
 
-		<md-list-item ng-repeat="instance in app.instances | orderBy:'get_label()'">
-			<md-button ng-click="app.selectInstance(instance)" ng-class="{'selected' : instance === app.selected }" md-truncate>
-			  {{instance.get_label()}}
-			</md-button>
-		</md-list-item>
+          <md-list-item ng-repeat="instance in app.instances | orderBy:'get_label()'">
+            <md-button ng-click="app.selectInstance(instance)" ng-class="{'selected' : instance === app.selected }" md-truncate>
+              {{instance.get_label()}}
+            </md-button>
+          </md-list-item>
 
-	  </md-list>
+        </md-list>
 
         <div ng-hide="app.instances.length"><md-button>No instances</md-button></div>
       </md-sidenav>
@@ -81,35 +84,49 @@
         <h2 class="md-display-1">{{app.selected.get_label()}}</h2>
         <h3 class="md-caption"><a href="{{app.selected.id}}" target="_blank" style="text-decoration: none; color:gray">{{app.selected.id}}</a></h3>
 
-        <md-list>
-          <md-list-item ng-repeat="attribute in app.selected.attributes" layout="row" ng-class-odd="'odd'" ng-class-even="'even'">
-            <span flex="20"><md-tooltip md-direction="bottom">{{attribute.description || attribute.name}}</md-tooltip>{{attribute.name}}</span>
-            <div ng-switch="app.attributeType(attribute)">
-              <div flex ng-switch-when="internal-link">
-                <md-icon>chevron_right</md-icon>
-                <md-button ng-click="app.switchTo(attribute.value['@id'])" class="md-primary">{{app.pathFromId(attribute.value['@id']).id}}</md-button>
+        <div ng-if="!app.editMode">
+          <md-list>
+            <md-list-item ng-repeat="attribute in app.selected.attributes" layout="row" ng-class-odd="'odd'" ng-class-even="'even'">
+              <span flex="20"><md-tooltip md-direction="bottom">{{attribute.description || attribute.name}}</md-tooltip>{{attribute.name || attribute.description}}</span>
+              <div ng-switch="app.attributeType(attribute)">
+                <div flex ng-switch-when="internal-link">
+                  <md-icon>chevron_right</md-icon>
+                  <md-button ng-click="app.switchTo(attribute.value['@id'])" class="md-primary">{{app.pathFromId(attribute.value['@id']).id}}</md-button>
+                </div>
+                <div flex ng-switch-when="external-link">
+                  {{attribute.value.label}}
+                  <md-button href="{{app.resolveId(attribute.value['@id'])}}"
+                  title="See definition"
+                  target="_blank"
+                  class="md-icon-button launch" >
+                      <md-icon>launch</md-icon>
+                  </md-button>
+                </div>
+                <div flex ng-switch-when="list-of-links">
+                  <md-icon>chevron_right</md-icon>
+                  <md-button ng-repeat="subattr in attribute.value" ng-click="app.switchTo(subattr['@id'])" class="md-primary">{{app.pathFromId(subattr['@id']).id}}</md-button>
+                </div>
+                <div flex ng-switch-when="literal">{{attribute.value}}</div>
+                <div flex ng-switch-when="quantity">{{attribute.value.value}} {{attribute.value.label}}</div>
+                <div flex ng-switch-when="age">{{attribute.value.value.value}} {{attribute.value.value.label}} ({{attribute.value.period.toLowerCase()}})</div>
+                <div flex ng-switch-when="address">{{attribute.value.addressLocality}}, {{attribute.value.addressCountry}}</div>
+                <div flex ng-switch-default>{{attribute.value}}</div>
               </div>
-              <div flex ng-switch-when="external-link">
-                {{attribute.value.label}}
-                <md-button href="{{app.resolveId(attribute.value['@id'])}}"
-                 title="See definition"
-                 target="_blank"
-                 class="md-icon-button launch" >
-                    <md-icon>launch</md-icon>
-                </md-button>
-              </div>
-              <div flex ng-switch-when="list-of-links">
-                <md-icon>chevron_right</md-icon>
-                <md-button ng-repeat="subattr in attribute.value" ng-click="app.switchTo(subattr['@id'])" class="md-primary">{{app.pathFromId(subattr['@id']).id}}</md-button>
-              </div>
-              <div flex ng-switch-when="literal">{{attribute.value}}</div>
-              <div flex ng-switch-when="quantity">{{attribute.value.value}} {{attribute.value.label}}</div>
-              <div flex ng-switch-when="age">{{attribute.value.value.value}} {{attribute.value.value.label}} ({{attribute.value.period.toLowerCase()}})</div>
-              <div flex ng-switch-when="address">{{attribute.value.addressLocality}}, {{attribute.value.addressCountry}}</div>
-              <div flex ng-switch-default>{{attribute.value}}</div>
-            </div>
-          </md-list-item>
-        </md-list>
+            </md-list-item>
+          </md-list>
+        </div>
+
+        <div ng-if="app.editMode">
+          <form name="userForm">
+          <md-input-container class="md-block" ng-repeat="attribute in app.selected.attributes" >
+            <label>{{attribute.name || attribute.description}}</label>
+            <input ng-model="attribute.value">
+          </md-input-container>
+          <div>
+            <md-button type="submit" class="md-raised md-primary" ng-click="app.saveInstance(app.selected)">Submit</md-button>
+          </div>
+          </form>
+        </div>
 
       </md-content>
 

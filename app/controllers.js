@@ -27,6 +27,8 @@ angular.module('nar')
     var vm = this;
     var base_url = "https://nexus-int.humanbrainproject.org/v0/";
 
+    vm.editMode = false;
+
     var error = function(response) {
         console.log(response);
     };
@@ -37,8 +39,10 @@ angular.module('nar')
     vm.handleLogin = function() {bbpOidcSession.login();}
     vm.handleLogout = function() {bbpOidcSession.logout();}
 
+    var Instances = null;
+
     var get_instances = function(type_id, focus) {
-        var Instances = KGResource(base_url + "data" + type_id);
+        Instances = KGResource(base_url + "data" + type_id);
 
         Instances.query().then(
             function(instances) {
@@ -62,6 +66,7 @@ angular.module('nar')
 
     vm.selectInstance = function(instance) {
         vm.selected = instance;
+        console.log(instance);
         $location.url(instance.path.id);
     };
 
@@ -102,8 +107,34 @@ angular.module('nar')
     };
 
     vm.switchTo = function(uri) {
+        vm.editMode = false;
         $location.url(PathHandler.extract_path_from_uri(uri).id);
     };
+
+    vm.createInstance = function() {
+        vm.editMode = true;
+        console.log("Creating new instance of " + current_type);
+        var instance = Instances.create();
+        console.log(instance);
+        vm.selectInstance(instance);
+    }
+
+    vm.saveInstance = function(instance) {
+        instance.save().then(
+            function success(response) {
+                instance.id = response.data['@id'];
+                instance.path = PathHandler.extract_path_from_uri(instance.id);
+                instance.saved = true;
+                vm.editMode = false;
+                console.log("SUCCESS");
+                //console.log(response);
+                //console.log(instance.path.id);
+                vm.instances.push(instance);
+                vm.selectInstance(instance);
+            },
+            error
+        );
+    }
 
     $rootScope.$on('$locationChangeSuccess', function(event, url, oldUrl, state, oldState) {
         if ($location.url() && $location.url() != "/") {  // todo: should match against a pattern
@@ -114,7 +145,10 @@ angular.module('nar')
                 get_instances(path.type, path.id);
                 current_type = path.type;
             } else {
-                vm.selected = vm.instances.filter(function(instance) {return instance.path.id === path.id})[0];
+                if (vm.selected.saved) {
+                    vm.editMode = false;
+                    vm.selected = vm.instances.filter(function(instance) {return instance.path.id === path.id})[0];
+                }
             }
         } else {
             vm.show_readme = true;
