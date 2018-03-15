@@ -23,9 +23,8 @@ Author: Andrew P. Davison, UNIC, CNRS
 
 angular.module('nar')
 
-.controller('DefaultController', function($location, $rootScope, KGResource, PathHandler, bbpOidcSession) {
+.controller('DefaultController', function($location, $rootScope, KGResource, PathHandler, bbpOidcSession, nexusBaseUrl) {
     var vm = this;
-    var base_url = "https://nexus-int.humanbrainproject.org/v0/";
 
     vm.editMode = false;
 
@@ -42,7 +41,7 @@ angular.module('nar')
     var Instances = null;
 
     var get_instances = function(type_id, focus) {
-        Instances = KGResource(base_url + "data" + type_id);
+        Instances = KGResource(nexusBaseUrl + "data" + type_id);
 
         Instances.query().then(
             function(instances) {
@@ -61,7 +60,7 @@ angular.module('nar')
 
     var current_type = null;
     vm.show_readme = false;
-    vm.base_url = base_url;
+    vm.base_url = nexusBaseUrl;
     vm.selected = null;
 
     vm.selectInstance = function(instance) {
@@ -75,7 +74,7 @@ angular.module('nar')
             return "age";  
         } else if (attribute.value) {
             if (attribute.value["@id"]) {
-                if (attribute.value["@id"].includes(base_url)) {
+                if (attribute.value["@id"].includes(nexusBaseUrl)) {
                     return "internal-link";
                 } else {
                     return "external-link";

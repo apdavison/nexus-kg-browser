@@ -41,6 +41,7 @@ Author: Andrew P. Davison, UNIC, CNRS
     'ngAria',
     'ngMessages'
   ])
+  .value('nexusBaseUrl', 'https://nexus-int.humanbrainproject.org/v0/')
   //.config(function($urlRouterProvider) {
   //  $urlRouterProvider.otherwise("/");
   //})
