@@ -99,17 +99,19 @@ describe('KGResource Spec', function () {
         it("should return a list of instances", inject(function () {
 
             var r = {
-                "total":0,
-                "results":[],
-                "links":[{
-                    "rel":"self",
-                    "href":"https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/brainslicing?deprecated=False"
-                    }]
-                };  // this object needs to be updated with a sample result
+                "@context": "https://nexus-int.humanbrainproject.org/v0/contexts/nexus/core/search/v0.1.0",
+                "total": 0,
+                "maxScore": 0,
+                "results": [],
+                "links": {
+                    "@context": "https://nexus-int.humanbrainproject.org/v0/contexts/nexus/core/links/v0.2.0",
+                    "self": "https://nexus-int.humanbrainproject.org/v0/data/neurosciencegraph/atlas/atlasconstruction/v0.1.0"
+                    }
+                };
 
-            $httpBackend.expectGET('https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/brainslicing?deprecated=False').respond(r);
+            $httpBackend.expectGET('https://nexus-int.humanbrainproject.org/v0/data/neurosciencegraph/atlas/atlasconstruction/v0.1.0?deprecated=False').respond(r);
 
-            var Instances = KGResource('https://nexus-int.humanbrainproject.org/v0/data/bbp/experiment/brainslicing');
+            var Instances = KGResource('https://nexus-int.humanbrainproject.org/v0/data/neurosciencegraph/atlas/atlasconstruction/v0.1.0');
 
             Instances.query().then(
                 function(instances) {
