@@ -180,6 +180,8 @@ angular.module('nar')
                     label = instance.data.name;
                 } else if (instance.data.hasOwnProperty('familyName')) {
                     label = instance.data.givenName + " " + instance.data.familyName;
+                } else if (instance.data.hasOwnProperty('http://schema.org/name')) {
+                    label = instance.data['http://schema.org/name'];
                 } else if (instance.data.hasOwnProperty('http://schema.org/familyName')) {
                     label = instance.data['http://schema.org/givenName'] + " " + instance.data['http://schema.org/familyName'];    
                 } else if (instance.data.hasOwnProperty('label')) {
@@ -265,6 +267,9 @@ angular.module('nar')
                     } else {
                         schema_properties[property_uri] = property;
                     }
+                    if (property.hasOwnProperty('node')) {
+                        property['node'] = Jsonld.resolve(property.node, context);
+                    }
                 }
             }
         }
@@ -297,7 +302,7 @@ angular.module('nar')
                                 }
                             }
                         } else {
-                            console.log("WARNING: shape not fully processed: " + shape["@id"])
+                            build_properties(shape, context);
                         }
                     }
                 }, 
@@ -338,7 +343,21 @@ angular.module('nar')
             return Instance({'@id': collection_uri + "/NEW", '@context': {}},
                             schema_properties,
                             target_class);
-        }
+        };
+
+        Resource.get = function(id) {
+
+            var get_instance =  function(uri) {
+                return $http.get(uri, config).then(
+                    function(response) {
+                        return Instance(response.data, schema_properties, target_class);
+                    },
+                    error
+                );
+            }
+
+            return get_schema().then(get_instance(id));
+        };
 
         return Resource;
     };

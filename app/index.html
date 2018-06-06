@@ -83,7 +83,7 @@
           <p>To report bugs or suggest improvements, please <a href="https://github.com/apdavison/nexus-kg-browser/issues" target="_blank">open an issue</a>.</p>
         </div>
 
-        <h2 class="md-display-1">{{app.selected.get_label()}} 
+        <h2 class="md-display-1" ng-show="!app.show_readme">{{app.selected.get_label()}} 
           <md-button ng-if="!app.editMode" class="md-icon-button" aria-label="Menu" ng-click="app.editInstance(app.selected)">
             <md-icon>create</md-icon>
           </md-button>
@@ -93,7 +93,7 @@
         <div ng-if="!app.editMode">
           <md-list>
             <md-list-item ng-repeat="attribute in app.selected.attributes" layout="row" ng-class-odd="'odd'" ng-class-even="'even'">
-              <span flex="20"><md-tooltip md-direction="bottom">{{attribute.description || attribute.name}}</md-tooltip>{{attribute.name || attribute.description}}</span>
+              <span flex="20"><md-tooltip md-direction="bottom">{{attribute.description || attribute.name}}</md-tooltip>{{attribute.name || attribute.description || attribute.path}}</span>
               <div ng-switch="app.attributeType(attribute)">
                 <div flex ng-switch-when="internal-link">
                   <md-icon>chevron_right</md-icon>
@@ -115,6 +115,7 @@
                 <div flex ng-switch-when="literal">{{attribute.value}}</div>
                 <div flex ng-switch-when="quantity">{{attribute.value.value}} {{attribute.value.label}}</div>
                 <div flex ng-switch-when="age">{{attribute.value.value.value}} {{attribute.value.value.label}} ({{attribute.value.period.toLowerCase()}})</div>
+                <div flex ng-switch-when="sex">{{attribute.value.label}}</div>
                 <div flex ng-switch-when="address">{{attribute.value.addressLocality}}, {{attribute.value.addressCountry}}</div>
                 <div flex ng-switch-default>{{attribute.value}}</div>
               </div>
@@ -124,10 +125,66 @@
 
         <div ng-if="app.editMode">
           <form name="userForm">
-          <md-input-container class="md-block" ng-repeat="attribute in app.selected.attributes" >
-            <label>{{attribute.name || attribute.description}}</label>
-            <input ng-model="attribute.value">
-          </md-input-container>
+          <div ng-repeat="attribute in app.selected.attributes">
+            <div ng-switch="app.attributeType(attribute)">
+              <div ng-switch-when="datetime">
+                <md-input-container class="md-block">
+                  <label>{{attribute.name || attribute.description}}</label>
+                  <md-datepicker ng-model="attribute.value"></md-datepicker>
+                </md-input-container>  
+              </div>
+              <div ng-switch-when="sex">
+                <md-input-container class="md-block md-input-has-value">
+                  <label>{{attribute.name || attribute.description}}</label>
+                  <md-radio-group ng-model="attribute.handleValue" ng-model-options="{ getterSetter: true }" layout="row">
+                      <md-radio-button value="male">Male</md-radio-button>
+                      <md-radio-button value="female">Female</md-radio-button>
+                  </md-radio-group>
+                </md-input-container>  
+              </div>
+              <div ng-switch-when="age" layout="row">
+                <md-input-container class="md-block" flex>
+                  <label>Age</label>
+                  <input ng-model="attribute.value.value.value">
+                </md-input-container> 
+                <md-input-container class="md-block" flex>
+                  <md-select ng-model="attribute.handleUnits" ng-model-options="{ getterSetter: true }" aria-label="units">
+                      <md-option value="days">days</md-option>
+                      <md-option value="weeks">weeks</md-option>
+                      <md-option value="months">months</md-option>
+                      <md-option value="years">years</md-option>
+                    </md-select>  
+                </md-input-container> 
+                <md-input-container class="md-block" flex>
+                  <md-select ng-model="attribute.value.period" aria-label="period">
+                    <md-option value="Post-natal">Post-natal</md-option>
+                    <md-option value="Pre-natal">Pre-natal</md-option>
+                  </md-select>  
+                </md-input-container> 
+              </div> 
+              <div ng-switch-when="quantity" layout="row">
+                <md-input-container class="md-block" flex>
+                  <label>{{attribute.name || attribute.description}}</label>
+                  <input ng-model="attribute.value.value">
+                </md-input-container>  
+                <md-input-container class="md-block" flex>
+                  <input ng-model="attribute.handleUnits" ng-model-options="{ getterSetter: true }" aria-label="units" >
+                </md-input-container>
+              </div> 
+              <div ng-switch-when="literal">
+                <md-input-container class="md-block">
+                  <label>{{attribute.name || attribute.description}}</label>
+                  <input ng-model="attribute.value">
+                </md-input-container>  
+              </div> 
+              <div ng-switch-default>
+                <md-input-container class="md-block">
+                  <label>{{attribute.name || attribute.description}}</label>
+                  <input ng-model="attribute.value" disabled>
+                </md-input-container>  
+              </div>
+            </div>
+          </div>
           <div>
             <md-button type="submit" class="md-raised md-primary" ng-click="app.saveInstance(app.selected)">Submit</md-button>
             <md-button type="cancel" class="md-raised" ng-click="app.editMode=false">Cancel</md-button>

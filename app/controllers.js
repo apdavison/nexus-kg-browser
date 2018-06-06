@@ -69,9 +69,61 @@ angular.module('nar')
         $location.url(instance.path.id);
     };
 
+    var titleCase = function(s) {
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    const OBO_UNITS = {
+        days: 'http://purl.obolibrary.org/obo/UO_0000033',
+        weeks: 'http://purl.obolibrary.org/obo/UO_0000034',
+        months: 'http://purl.obolibrary.org/obo/UO_0000035',
+        years: 'http://purl.obolibrary.org/obo/UO_0000036',
+        mm: 'http://purl.obolibrary.org/obo/UO_0000016',
+        um: 'http://purl.obolibrary.org/obo/UO_0000017',
+        'µm': 'http://purl.obolibrary.org/obo/UO_0000017'
+    }
+
     vm.attributeType = function(attribute) {
-        if (attribute.path === "nsg:age") {  // todo:  expand 'nsg' to a full URL
-            return "age";  
+        if (attribute.datatype) {
+            if (attribute.datatype === "xsd:dateTime") {
+                return "datetime";
+            } else if (attribute.datatype === "xsd:string") {
+                return "literal";
+            }
+        } else if (attribute.node) {
+            if (attribute.node.endsWith('AgeShape')) {
+                attribute.handleUnits = function(units) {
+                    if (units) {
+                        attribute.value.value.label = units;
+                        attribute.value.value.unitCode = OBO_UNITS[units];
+                    } else {
+                        return attribute.value.value.label;
+                    }
+                    console.log(attribute.value);
+                }
+                return 'age';
+            } else if (attribute.node.endsWith('SexOntologyTermShape')) {
+                attribute.handleValue = function(sex) {
+                    if (sex) {
+                        attribute.value = { "@id": "schema:" + titleCase(sex), label: sex }
+                        console.log(attribute.value);
+                    } else {
+                        return attribute.value.label;
+                    }
+                }
+                return 'sex';
+            } else if (attribute.node.endsWith('QuantitativeValueShape')) {
+                attribute.handleUnits = function(units) {
+                    if (units) {
+                        attribute.value.label = units;
+                        attribute.value.unitCode = OBO_UNITS[units];
+                    } else {
+                        return attribute.value.label;
+                    }
+                    console.log(attribute.value);
+                }
+                return "quantity";
+            }
         } else if (attribute.value) {
             if (attribute.value["@id"]) {
                 if (attribute.value["@id"].includes(nexusBaseUrl)) {
